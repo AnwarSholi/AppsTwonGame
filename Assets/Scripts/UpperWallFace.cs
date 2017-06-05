@@ -523,6 +523,7 @@ public class UpperWallFace : MonoBehaviour
 						__Vertices.Add (directedPaths [i] [j + 1]);
 					}
 
+					directedPath.Add (new Line (__Vertices, id1, id2, 0.5f, 0.5f, null, null, null, pathId [i] [0].SideMaterial));
 				}
 
 				{
@@ -542,6 +543,7 @@ public class UpperWallFace : MonoBehaviour
 						__Vertices.Add (l2v1);
 					}
 
+					directedPath.Add (new Line (__Vertices, id1, id2, 0.5f, 0.5f, null, null, null, pathId [i] [0].SideMaterial));
 				}
 
 				{
@@ -561,6 +563,7 @@ public class UpperWallFace : MonoBehaviour
 						__Vertices.Add (l2v2);
 					}
 
+					directedPath.Add (new Line (__Vertices, id1, id2, 0.5f, 0.5f, null, null, null, pathId [i] [0].SideMaterial));
 				}
 
 				for (int j = 0; j < directedPaths [secondID].Count; j += 2) {
@@ -580,6 +583,7 @@ public class UpperWallFace : MonoBehaviour
 						__Vertices.Add (directedPaths [secondID] [j + 1]);
 					}
 
+					directedPath.Add (new Line (__Vertices, id1, id2, 0.5f, 0.5f, null, null, null, pathId [secondID] [0].SideMaterial));
 				
 
 				}
@@ -646,6 +650,7 @@ public class UpperWallFace : MonoBehaviour
 						__Vertices.Add (directedPaths [i] [j + 1]);
 					}
 
+					directedPath.Add (new Line (__Vertices, id1, id2, 0.5f, 0.5f, null, null, null, pathId [i] [0].SideMaterial));
 				}
 
 				Line.WeldVertices (directedPath);

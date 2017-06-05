@@ -131,8 +131,12 @@ public class Roof : MonoBehaviour {
 			List<Vector3> tmpverts = new List<Vector3> ();
 			tmpverts.AddRange (directedPaths [outerDP]);
 			for (int j = 0; j < directedPaths [outerDP].Count; j += 2) {
+				Line ll = new Line (tmpverts, j, j + 1, 0, 0, null, null, null, null);
 				ll.Destroy ();
 
+
+				ll.InsulationThickness = inset * 1.0f;
+                ll.WallThickness = inset * 1.0f;
 				outer.Add (ll);
 			}
 	
@@ -243,6 +247,7 @@ public class Roof : MonoBehaviour {
 
 				List<Line> CapLines = new List<Line> ();
 				for (int i = 0; i < newLines.Count; i += 2) {
+					Line l = new Line (newLines, i, i + 1, 0, 0, null, null, null, null);
 					l.Destroy ();
 					CapLines.Add (l);
 				}
@@ -418,6 +423,7 @@ public class Roof : MonoBehaviour {
 				List<Line> output = new List<Line> ();
 				for (int i = 0; i < directedPaths[0].Count; i += 2)
 				{
+					Line l = new Line (directedPaths [0], i, i + 1, 0, 0, null, null, null, null);
 					l.Destroy ();
 					output.Add (l);
 				}
