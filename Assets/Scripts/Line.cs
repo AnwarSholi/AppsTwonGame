@@ -151,12 +151,19 @@ public class Line
         }
     }
     LineRenderer lr;
+    public float InsulationThickness;
+    public float WallThickness;
+    public float Thickness{
+        get {
 
-    public float Thickness;
+            return (InsulationThickness + WallThickness);
+        }
+    }
+
 
     public List<Vector3> Vertices { get; set; }
 
-    public Line(List<Vector3> vertices, int a, int b, float thickness, Material mat, Material innerMaterial, Material outerMaterial, Material sideMaterial)
+    public Line(List<Vector3> vertices, int a, int b, float insulationThickness, float wallThickness, Material mat, Material innerMaterial, Material outerMaterial, Material sideMaterial)
     {
         Vertices = vertices;
         if (mat != null)
@@ -171,7 +178,9 @@ public class Line
             //lr.SetWidth(0.05f, 0.05f);
             lr.useWorldSpace = true;
         }
-        Thickness = thickness;
+
+        InsulationThickness = insulationThickness;
+        WallThickness = wallThickness;
         aID = a;
         bID = b;
         InnerMaterial = innerMaterial;
@@ -467,7 +476,7 @@ public class Line
                         int newid = output[i].Vertices.Count;
                         output[i].Vertices.Add(point);
 
-                        Line l = new Line(output[i].Vertices, newid, output[i].bID, output[i].Thickness, output[i].LineMaterial, output[i].InnerMaterial, output[i].OuterMaterial, output[i].SideMaterial);
+                        Line l = new Line(output[i].Vertices, newid, output[i].bID, output[i].InsulationThickness, output[i].WallThickness, output[i].LineMaterial, output[i].InnerMaterial, output[i].OuterMaterial, output[i].SideMaterial);
                         l.Enabled = output[i].Enabled;
                         l.Parent = output[i].Parent;
                         output[i].bID = newid;
@@ -930,7 +939,7 @@ public class Line
                         vbuffer.Add(v2);
                     }
 
-                    Line firstSeg = new Line(vbuffer, id1, id2, _segments[i].Thickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
+                    Line firstSeg = new Line(vbuffer, id1, id2, _segments[i].InsulationThickness, _segments[i].WallThickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
                     firstSeg.Height = _segments[i].Height;
                     firstSeg.LineType = LineType.Wall;
                     firstSeg.ParentLine = _segments[i];
@@ -960,7 +969,7 @@ public class Line
                     }
 
 
-                    Line windowSeg = new Line(vbuffer, istart, iend, _segments[i].Thickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
+                    Line windowSeg = new Line(vbuffer, istart, iend, _segments[i].InsulationThickness, _segments[i].WallThickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
                     windowSeg.LedgeHeight = windows[j].Position.y;
                     windowSeg.WindowHeight = windows[j].WindowHeight;
                     windowSeg.LineType = LineType.Window;
@@ -977,7 +986,7 @@ public class Line
                         inextStart = vbuffer.Count;
                         vbuffer.Add(nextStart);
                     }
-                    Line nextSeg = new Line(vbuffer, iend, inextStart, _segments[i].Thickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
+                    Line nextSeg = new Line(vbuffer, iend, inextStart, _segments[i].InsulationThickness, _segments[i].WallThickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
                     nextSeg.Height = _segments[i].Height;
                     nextSeg.LineType = LineType.Wall;
                     nextSeg.ParentLine = _segments[i];
@@ -1005,7 +1014,7 @@ public class Line
                     }
 
 
-                    Line windowSeg = new Line(vbuffer, istart, iend, _segments[i].Thickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
+                    Line windowSeg = new Line(vbuffer, istart, iend, _segments[i].InsulationThickness, _segments[i].WallThickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
                     windowSeg.LedgeHeight = windows[windows.Count - 1].Position.y;
                     windowSeg.WindowHeight = windows[windows.Count - 1].WindowHeight;
                     windowSeg.LineType = LineType.Window;
@@ -1022,7 +1031,7 @@ public class Line
                         vbuffer.Add(_segments[i].b);
                     }
 
-                    Line lastSeg = new Line(vbuffer, iend, id2, _segments[i].Thickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
+                    Line lastSeg = new Line(vbuffer, iend, id2, _segments[i].InsulationThickness, _segments[i].WallThickness, _segments[i].LineMaterial, _segments[i].InnerMaterial, _segments[i].OuterMaterial, _segments[i].SideMaterial);
                     lastSeg.Height = _segments[i].Height;
                     lastSeg.LineType = LineType.Wall;
                     lastSeg.ParentLine = _segments[i];
@@ -1220,7 +1229,7 @@ public class Line
 					List<Vector3> tmpverts = new List<Vector3> ();
 					tmpverts.AddRange (directedPaths [i]);
 					for (int j = 0; j < directedPaths [i].Count; j += 2) {
-						Line ll = new Line (tmpverts, j, j + 1, 0, null, null, null, null);
+						Line ll = new Line (tmpverts, j, j + 1, 0, 0, null, null, null, null);
 						ll.Destroy ();
 						toCap.Add (ll);
 					}
@@ -1821,7 +1830,7 @@ public class Line
 				if (list.FindIndex(delegate (Line obj) {
 					return (obj.aID == ix1[0] && obj.bID == ix2[0]) || (obj.aID == ix2[0] && obj.bID == ix1[0]);
 				}) == -1)
-					list.Add(new Line(list[0].Vertices, ix1[0], ix2[0], 1, null, null, null, null));
+					list.Add(new Line(list[0].Vertices, ix1[0], ix2[0], 0.5f, 0.5f, null, null, null, null));
 				continue;
 			}
 
@@ -1847,7 +1856,7 @@ public class Line
 				if (list.FindIndex(delegate (Line obj) {
 					return (obj.aID == ix1[1] && obj.bID == ix2[1]) || (obj.aID == ix2[1] && obj.bID == ix1[1]);
 				}) == -1)
-					list.Add(new Line(list[1].Vertices, ix1[1], ix2[1], 1, null, null, null, null));
+					list.Add(new Line(list[1].Vertices, ix1[1], ix2[1], 0.5f, 0.5f, null, null, null, null));
 				continue;
 			}
 
