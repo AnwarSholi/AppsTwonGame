@@ -241,6 +241,7 @@ public class BuildingArea : MonoBehaviour
 
 			for (int i = 0; i < lines.Count; i++) {
 				Line l = new Line (ba.lineVertices, lines [i].aID, lines [i].bID, lines [i].InsulationThickness, lines[i].WallThickness, GameObject.Instantiate (lines [i].LineMaterial), GameObject.Instantiate (lines [i].InnerMaterial), GameObject.Instantiate (lines [i].OuterMaterial), GameObject.Instantiate (lines [i].SideMaterial));
+				Line l = new Line (ba.lineVertices, lines [i].aID, lines [i].bID, lines [i].Thickness, GameObject.Instantiate (lines [i].LineMaterial), GameObject.Instantiate (lines [i].InnerMaterial), GameObject.Instantiate (lines [i].OuterMaterial), GameObject.Instantiate (lines [i].SideMaterial));
 
 				for (int j = 0; j < lines [i].Doors.Count; j++) {
 					WallDoor wd = new WallDoor (l, lines [i].Doors [j].Position.x, lines [i].Doors [j].DoorWidth, lines [i].Doors [j].DoorHeight, GameObject.Instantiate (lines [i].Doors [j].Door));
@@ -276,6 +277,7 @@ public class BuildingArea : MonoBehaviour
 		ba.DraggedLineMaterial = DraggedLineMaterial;
 		ba.gameCamera = Camera.main.GetComponent<ObjectFollowCamera>();
 		ba.DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.2f, 0.2f, ba.DraggedLineMaterial, null, null, null);
+		ba.DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.4f, ba.DraggedLineMaterial, null, null, null);
 		ba.DraggedLine.Enabled = false;
 		ba.IsBasement = IsBasement;
 	}
@@ -599,6 +601,7 @@ public class BuildingArea : MonoBehaviour
 			snapObject = GameObject.Instantiate (snapObject);
 		
         DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.2f, 0.2f, DraggedLineMaterial, null, null, null);
+        DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.4f, DraggedLineMaterial, null, null, null);
 		DraggedLine.Height = Height;
 		DraggedLine.Enabled = false;
 
@@ -784,7 +787,6 @@ public class BuildingArea : MonoBehaviour
     void Update()
     {
       
-        if (!enabled)
 			return;
 		
 		if (IsBasement) {
@@ -809,8 +811,10 @@ public class BuildingArea : MonoBehaviour
 							pointA = hit.point;
 							if (DraggedAreaLines [0] == null) {
 								DraggedAreaLines [0] = new Line (new List<Vector3> () { pointA, pointA, pointA, pointA }, 0, 1, 0.2f, 0.2f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
+								DraggedAreaLines [0] = new Line (new List<Vector3> () { pointA, pointA, pointA, pointA }, 0, 1, 0.4f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
 								for (int i = 0; i < 3; i++)
 									DraggedAreaLines [i + 1] = new Line (DraggedAreaLines [0].Vertices, i + 1, (i + 2) % 4, 0.2f, 0.2f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
+									DraggedAreaLines [i + 1] = new Line (DraggedAreaLines [0].Vertices, i + 1, (i + 2) % 4, 0.4f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
 							}
 
 							for (int i = 0; i < DraggedAreaLines [0].Vertices.Count; i++) {
@@ -836,7 +840,6 @@ public class BuildingArea : MonoBehaviour
 							//DraggedAreaLines [3].bID = 0;
 						}
 					}
-					else if (Input.GetMouseButtonUp(0) && DraggedAreaLines[0] != null  && !EventSystem.current.IsPointerOverGameObject () && (pointA - hit.point).sqrMagnitude > 0.0001f) {
 						for (int i = 0; i < DraggedAreaLines.Length; i++) {
 							DraggedAreaLines [i].Enabled = false;
 							DraggedAreaLines [i].Height = BasementHeight;
@@ -859,7 +862,6 @@ public class BuildingArea : MonoBehaviour
 						upperWallFace = new GameObject ("upper wall face");
 						upperWallFace.AddComponent<MeshFilter> ().mesh = GetOuterCeil ();
 						upperWallFace.AddComponent<MeshRenderer> ();
-						upperWallFace.AddComponent<MeshCollider> ();
 						upperWallFace.AddComponent<MeshCollider> ();
 
 						for (int i = 0; i < floors.Count; i++) {
@@ -961,15 +963,6 @@ public class BuildingArea : MonoBehaviour
 													wallface.RelatedLine.Doors.Add (new WallDoor (wallface.RelatedLine, location.x, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
 													regeneratePath (false);
 												}
-											} else if (correctedLocation.HasValue) {
-												if (SelectedItem.itemType == type.Window) {
-													wallface.RelatedLine.Windows.Add (new WallWindow (wallface.RelatedLine, correctedLocation.Value, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
-													regeneratePath (false);
-												} else if (SelectedItem.itemType == type.Door) {
-													wallface.RelatedLine.Doors.Add (new WallDoor (wallface.RelatedLine, correctedLocation.Value.x, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
-													regeneratePath (false);
-												}
-											}
 										}
 									}
 								} else { // not window and not door
@@ -1140,6 +1133,7 @@ public class BuildingArea : MonoBehaviour
 								}
 
 								lines.Add (new Line (lineVertices, id1, id2, InsulationDefThickness, WallDefThickness, LineMaterial, DefaultInnerWallMaterial, DefaultOuterWallMaterial, DefaultSideMaterial));
+								lines.Add (new Line (lineVertices, id1, id2, 0.2f, LineMaterial, DefaultInnerWallMaterial, DefaultOuterWallMaterial, DefaultSideMaterial));
 								lines [lines.Count - 1].Height = Height;
 								lines [lines.Count - 1].Parent = this.transform;
 								pointASelected = false;
@@ -1267,6 +1261,7 @@ public class BuildingArea : MonoBehaviour
 				verts.Add (wallFaces [i].a);
 				verts.Add (wallFaces [i].b);
 				outer.Add (new Line (verts, verts.Count - 2, verts.Count - 1, 0.05f, 0.05f, null, null, null, null));
+				outer.Add (new Line (verts, verts.Count - 2, verts.Count - 1, 0.1f, null, null, null, null));
 			}
 		}
 		Line.WeldVertices (outer);
@@ -1483,6 +1478,7 @@ public class BuildingArea : MonoBehaviour
 
 
     public void GetWallArea()//selected
+    public void GetWallArea()
     {
         float wallSum = 0;
         wallSum+=(selectedWallFace.RelatedLine.a - selectedWallFace.RelatedLine.b).magnitude;
@@ -1520,10 +1516,8 @@ public class BuildingArea : MonoBehaviour
 
     public void GetWallThickness()
     {
-        trialThickness = selectedWallFace.RelatedLine.Thickness;
         float th = selectedWallFace.RelatedLine.Thickness;
         Debug.Log ("the thickness of this wall =" + th);
-        
     }
 	public void ClearSelection(){
 		selectedWallFace = null;
