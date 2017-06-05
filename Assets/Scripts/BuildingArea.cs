@@ -24,7 +24,10 @@ public enum ViewingMode
 public class BuildingArea : MonoBehaviour
 {
 
+    public Text SelectedWallArea, TotalWallArea, TotalWindowArea, TotalDoorArea, roofArea;
+    public InputField roofDepth, wallThick;
     BuildingEditMode _mode;
+    public float RoofDepth = 0.4f;
     public BuildingEditMode Mode
     {
         get
@@ -90,9 +93,6 @@ public class BuildingArea : MonoBehaviour
 	public bool isCeil = false;
 	public Material CeilMaterial;
     public float DoubleClickCatchTime = 0.25f;
-	public Material PlaceholderMaterial;
-	public Material PlaceholderErrorMaterial;
-
 
     private WallFace _selectedWallFace = null;
     private WallFace selectedWallFace
@@ -241,7 +241,7 @@ public class BuildingArea : MonoBehaviour
 			ba.lineVertices = new List<Vector3> (lines [0].Vertices);
 
 			for (int i = 0; i < lines.Count; i++) {
-				Line l = new Line (ba.lineVertices, lines [i].aID, lines [i].bID, lines [i].InsulationThickness, lines[i].WallThickness, GameObject.Instantiate (lines [i].LineMaterial), GameObject.Instantiate (lines [i].InnerMaterial), GameObject.Instantiate (lines [i].OuterMaterial), GameObject.Instantiate (lines [i].SideMaterial));
+				Line l = new Line (ba.lineVertices, lines [i].aID, lines [i].bID, lines [i].Thickness, GameObject.Instantiate (lines [i].LineMaterial), GameObject.Instantiate (lines [i].InnerMaterial), GameObject.Instantiate (lines [i].OuterMaterial), GameObject.Instantiate (lines [i].SideMaterial));
 
 				for (int j = 0; j < lines [i].Doors.Count; j++) {
 					WallDoor wd = new WallDoor (l, lines [i].Doors [j].Position.x, lines [i].Doors [j].DoorWidth, lines [i].Doors [j].DoorHeight, GameObject.Instantiate (lines [i].Doors [j].Door));
@@ -276,12 +276,18 @@ public class BuildingArea : MonoBehaviour
 		ba.SelectedItem = null;
 		ba.DraggedLineMaterial = DraggedLineMaterial;
 		ba.gameCamera = Camera.main.GetComponent<ObjectFollowCamera>();
-		ba.DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.2f, 0.2f, ba.DraggedLineMaterial, null, null, null);
+		ba.DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.4f, ba.DraggedLineMaterial, null, null, null);
 		ba.DraggedLine.Enabled = false;
 		ba.IsBasement = IsBasement;
 
-		ba.PlaceholderMaterial = PlaceholderMaterial;
-		ba.PlaceholderErrorMaterial = PlaceholderErrorMaterial;
+        ba.SelectedWallArea = SelectedWallArea;
+        ba.roofArea = roofArea;
+        ba.roofDepth = roofDepth;
+        ba.RoofDepth = RoofDepth;
+        ba.TotalWallArea = TotalWallArea;
+        ba.TotalDoorArea = TotalDoorArea;
+        ba.TotalWindowArea = TotalWindowArea;
+        ba.wallThick = wallThick;
 	}
 
 	public void SetWorkingHeight(float y)
@@ -326,10 +332,6 @@ public class BuildingArea : MonoBehaviour
 
     Draggable wallFaceHandleDraggable;
     GameObject wallFaceHandleObject;
-	/// <summary>
-	/// to make a shadow to the window or door
-	/// </summary>
-	GameObject tempObjectPlaceholder; 
 
     void WallFaceHandleDraggable_StartMoving(GameObject sender, Vector3 oldPosition, Vector3 newPosition)
     {
@@ -579,27 +581,7 @@ public class BuildingArea : MonoBehaviour
         regeneratePath(false);
     }
 
-	item selectedItem;
-    public item SelectedItem 
-	{ 
-		get
-		{
-			return selectedItem;
-		}
-		set{
-			selectedItem = value;
-
-			if (selectedItem == null) {
-				GameObject.Destroy (tempObjectPlaceholder);
-				tempObjectPlaceholder = null;
-			}
-		}
-	}
-
-
-	//public void SetSelectedItem(){
-		
-
+    public item SelectedItem { get; set; }
 
 
     ObjectFollowCamera gameCamera;
@@ -625,7 +607,7 @@ public class BuildingArea : MonoBehaviour
 		if (snapObject != null)
 			snapObject = GameObject.Instantiate (snapObject);
 		
-        DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.2f, 0.2f, DraggedLineMaterial, null, null, null);
+        DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.4f, DraggedLineMaterial, null, null, null);
 		DraggedLine.Height = Height;
 		DraggedLine.Enabled = false;
 
@@ -810,6 +792,74 @@ public class BuildingArea : MonoBehaviour
 
     void Update()
     {
+        bool flagDoors=false,flagWindows = false;
+
+        //selected wall area
+        if(selectedWallFace != null)
+        SelectedWallArea.text = returnWallArea().ToString();
+        else
+            SelectedWallArea.text = "0.0";
+
+       //total walls
+        if (lines.Count != 0)
+            TotalWallArea.text = returnTotalWallsArea().ToString();
+        else
+            TotalWallArea.text = "0.0";
+
+        //selected wall thickness
+        if (selectedWallFace != null)
+        {
+           // wallThick.onValueChanged
+            setWallThickness();
+        }
+        else
+            wallThick.text = "0.0";
+
+        //total doors
+         for (int i = 0; i < lines.Count; i++)
+         {
+             if (lines[i].Doors.Count != 0)
+             {
+                 flagDoors = true;
+             }
+         }
+         if (flagDoors !=false)
+         {
+             TotalDoorArea.text = returnAllDoorArea().ToString();
+         }
+         else
+             TotalDoorArea.text = "0.0";
+
+       // Total windows 
+         for (int i = 0; i < lines.Count; i++)
+         {
+             if (lines[i].Windows.Count != 0)
+             {
+                 flagWindows = true;
+             }
+         }
+         if (flagWindows != false)
+         {
+             TotalDoorArea.text = returnAllDoorArea().ToString();
+         }
+         else
+             TotalDoorArea.text = "0.0";
+
+        //roof area & depth
+         if (Roof != null)
+         {
+             roofArea.text = returnRoofArea().ToString();
+             GetRoofDepth();
+         }
+         else
+         {
+             roofArea.text = "0.0";
+             roofDepth.text = "0.0";
+         }
+
+
+        
+
 		if (!enabled)
 			return;
 		
@@ -834,9 +884,9 @@ public class BuildingArea : MonoBehaviour
 						if (!pointASelected) {
 							pointA = hit.point;
 							if (DraggedAreaLines [0] == null) {
-								DraggedAreaLines [0] = new Line (new List<Vector3> () { pointA, pointA, pointA, pointA }, 0, 1, 0.2f, 0.2f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
+								DraggedAreaLines [0] = new Line (new List<Vector3> () { pointA, pointA, pointA, pointA }, 0, 1, 0.4f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
 								for (int i = 0; i < 3; i++)
-									DraggedAreaLines [i + 1] = new Line (DraggedAreaLines [0].Vertices, i + 1, (i + 2) % 4, 0.2f, 0.2f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
+									DraggedAreaLines [i + 1] = new Line (DraggedAreaLines [0].Vertices, i + 1, (i + 2) % 4, 0.4f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
 							}
 
 							for (int i = 0; i < DraggedAreaLines [0].Vertices.Count; i++) {
@@ -862,16 +912,13 @@ public class BuildingArea : MonoBehaviour
 							//DraggedAreaLines [3].bID = 0;
 						}
 					}
-					else if (Input.GetMouseButtonUp(0) && DraggedAreaLines[0] != null  && !EventSystem.current.IsPointerOverGameObject () && (Mathf.Abs(pointA.x - hit.point.x)>= .001f && Mathf.Abs(pointA.z - hit.point.z)>= .001f)) {
+					else if (Input.GetMouseButtonUp(0) && DraggedAreaLines[0] != null  && !EventSystem.current.IsPointerOverGameObject () && (pointA - hit.point).sqrMagnitude > 0.0001f) {
 						for (int i = 0; i < DraggedAreaLines.Length; i++) {
 							DraggedAreaLines [i].Enabled = false;
 							DraggedAreaLines [i].Height = BasementHeight;
 						}
 						lines.Clear ();
 						lines.AddRange (DraggedAreaLines);
-
-
-
 						DraggedAreaLines = new Line[4];
 
 						regeneratePath (true);
@@ -888,6 +935,7 @@ public class BuildingArea : MonoBehaviour
 						upperWallFace = new GameObject ("upper wall face");
 						upperWallFace.AddComponent<MeshFilter> ().mesh = GetOuterCeil ();
 						upperWallFace.AddComponent<MeshRenderer> ();
+						upperWallFace.AddComponent<MeshCollider> ();
 						upperWallFace.AddComponent<MeshCollider> ();
 
 						for (int i = 0; i < floors.Count; i++) {
@@ -982,11 +1030,6 @@ public class BuildingArea : MonoBehaviour
 											Vector2 location;
 											Vector2? correctedLocation;
 											if (wallface.RelatedLine.LocateItemInWall (hit.point, SelectedItem, out location, 100, out correctedLocation)) {
-												if (tempObjectPlaceholder != null) {
-													GameObject.Destroy (tempObjectPlaceholder);
-													tempObjectPlaceholder = null;
-												}
-
 												if (SelectedItem.itemType == type.Window) {
 													wallface.RelatedLine.Windows.Add (new WallWindow (wallface.RelatedLine, location, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
 													regeneratePath (false);
@@ -994,16 +1037,15 @@ public class BuildingArea : MonoBehaviour
 													wallface.RelatedLine.Doors.Add (new WallDoor (wallface.RelatedLine, location.x, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
 													regeneratePath (false);
 												}
-											} 
-//											else if (correctedLocation.HasValue) {
-//												if (SelectedItem.itemType == type.Window) {
-//													wallface.RelatedLine.Windows.Add (new WallWindow (wallface.RelatedLine, correctedLocation.Value, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
-//													regeneratePath (false);
-//												} else if (SelectedItem.itemType == type.Door) {
-//													wallface.RelatedLine.Doors.Add (new WallDoor (wallface.RelatedLine, correctedLocation.Value.x, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
-//													regeneratePath (false);
-//												}
-//											}
+											} else if (correctedLocation.HasValue) {
+												if (SelectedItem.itemType == type.Window) {
+													wallface.RelatedLine.Windows.Add (new WallWindow (wallface.RelatedLine, correctedLocation.Value, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
+													regeneratePath (false);
+												} else if (SelectedItem.itemType == type.Door) {
+													wallface.RelatedLine.Doors.Add (new WallDoor (wallface.RelatedLine, correctedLocation.Value.x, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, Instantiate (SelectedItem.prefabItem.gameObject)));
+													regeneratePath (false);
+												}
+											}
 										}
 									}
 								} else { // not window and not door
@@ -1065,68 +1107,6 @@ public class BuildingArea : MonoBehaviour
 									floorColliders [i].enabled = false;
 								}
 							}
-						} else {
-							if (SelectedItem == null) {
-
-//								WallFace wallface = getSelectedWallFace ();
-//								if (wallface != null) {
-//									selectedWallFace = wallface;
-//								}
-							} else {
-								// when click add window and doors
-
-								for (int i = 0; i < floorColliders.Count; i++) {
-									floorColliders [i].enabled = true;
-								}
-
-								if (SelectedItem.itemType == type.Window || SelectedItem.itemType == type.Door) {
-									WallFace wallface = getSelectedWallFace ();
-									if (wallface != null) {
-										Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-										RaycastHit hit;
-										if (Physics.Raycast (ray, out hit, float.MaxValue) && !EventSystem.current.IsPointerOverGameObject ()) {
-											Vector2 location;
-											Vector2? correctedLocation;
-											//if (wallface.RelatedLine.LocateItemInWall (hit.point, SelectedItem, out location, 100, out correctedLocation)) 
-											{
-
-												if (tempObjectPlaceholder == null)
-													tempObjectPlaceholder =	Instantiate (SelectedItem.prefabItem.gameObject);
-												if (wallface.RelatedLine.LocateItemInWall (hit.point, SelectedItem, out location, 100, out correctedLocation)) {
-													MeshRenderer[] components = tempObjectPlaceholder.GetComponentsInChildren<MeshRenderer> ();
-													for (int i = 0; i < components.Length; i++) {
-														Material[] tempMaterial = new Material[components [i].materials.Length];
-													
-														for (int j = 0; j < tempMaterial.Length; j++)
-															tempMaterial [j] = PlaceholderMaterial;
-														components [i].materials = tempMaterial;
-													}
-												} else {
-													MeshRenderer[] components = tempObjectPlaceholder.GetComponentsInChildren<MeshRenderer> ();
-													for (int i = 0; i < components.Length; i++) {
-														Material[] tempMaterial = new Material[components [i].materials.Length];
-
-														for (int j = 0; j < tempMaterial.Length; j++)
-															tempMaterial [j] = PlaceholderErrorMaterial;
-														components [i].materials = tempMaterial;
-													}
-												}
-												if (SelectedItem.itemType == type.Window) {
-													new WallWindow (wallface.RelatedLine, location, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, tempObjectPlaceholder);
-												} else if (SelectedItem.itemType == type.Door) {
-													
-													new WallDoor (wallface.RelatedLine, location.x, SelectedItem.prefabItem.Size.z, SelectedItem.prefabItem.Size.y, tempObjectPlaceholder);
-												}
-											}
-//											else if (correctedLocation.HasValue) {
-												
-//											}
-										}
-									}
-								}
-						
-							}
-
 						}
 					}
 					break;
@@ -1235,7 +1215,7 @@ public class BuildingArea : MonoBehaviour
 									lineVertices.Add (pointB);
 								}
 
-								lines.Add (new Line (lineVertices, id1, id2, 0.1f, 0.1f, LineMaterial, DefaultInnerWallMaterial, DefaultOuterWallMaterial, DefaultSideMaterial));
+								lines.Add (new Line (lineVertices, id1, id2, 0.2f, LineMaterial, DefaultInnerWallMaterial, DefaultOuterWallMaterial, DefaultSideMaterial));
 								lines [lines.Count - 1].Height = Height;
 								lines [lines.Count - 1].Parent = this.transform;
 								pointASelected = false;
@@ -1362,7 +1342,7 @@ public class BuildingArea : MonoBehaviour
 
 				verts.Add (wallFaces [i].a);
 				verts.Add (wallFaces [i].b);
-				outer.Add (new Line (verts, verts.Count - 2, verts.Count - 1, 0.05f, 0.05f, null, null, null, null));
+				outer.Add (new Line (verts, verts.Count - 2, verts.Count - 1, 0.1f, null, null, null, null));
 			}
 		}
 		Line.WeldVertices (outer);
@@ -1494,7 +1474,7 @@ public class BuildingArea : MonoBehaviour
 			if (roofEnabled)
 			{
 				Roof = new GameObject("roof");
-				Roof.AddComponent<Roof>().CreateFromLines(lines, 0.4f, 0.4f);
+				Roof.AddComponent<Roof>().CreateFromLines(lines, 0.4f, RoofDepth);
 				Roof.transform.parent = transform;
 				Roof.GetComponent<MeshRenderer>().material = DefaultRoofMaterial;
 				if (_viewingMode == ViewingMode.Interior)
@@ -1578,7 +1558,17 @@ public class BuildingArea : MonoBehaviour
     }
 
 
-    public void GetWallArea()
+    public float returnTotalWallsArea()
+    {
+        float sum = 0;        
+        for (int i = 0; i < lines.Count; i++)
+        {
+            sum += (lines[i].a - lines[i].b).magnitude*lines[i].Height;
+        }
+            return sum;
+    }
+
+    public void GetWallArea()//selected
     {
         float wallSum = 0;
         wallSum+=(selectedWallFace.RelatedLine.a - selectedWallFace.RelatedLine.b).magnitude;
@@ -1586,7 +1576,15 @@ public class BuildingArea : MonoBehaviour
         Debug.Log ("the area of the wall = " + wallSum +" M");
     }
 
-    public void GetAllWindowArea()
+    public float returnWallArea()
+    {
+        float wallSum = 0;
+        wallSum += (selectedWallFace.RelatedLine.a - selectedWallFace.RelatedLine.b).magnitude;
+        wallSum *= selectedWallFace.Height;
+        return wallSum; 
+    }
+
+    public void GetSelectedWindowArea()
     {
         float windowSum = 0;
         float h , w;
@@ -1599,8 +1597,31 @@ public class BuildingArea : MonoBehaviour
         Debug.Log ("The area of all windows at this wall ="+ windowSum);
     }
 
+   public float returnAllWindowArea()
+    {
+        /*float windowSum = 0;
+        float h, w;
+        for (int j = 0; j < lines.Count; j++)
+        {
+            for (int i = 0; i < lines[j].Windows.Count; i++)
+            {
+                h = lines[j].Windows[i].WindowHeight;
+                w = lines[j].Windows[i].WindowWidth;
+                windowSum += (h * w);
+            }
+        }*/
+        float windowSum = 0;
+        float h, w;
+        for (int i = 0; i < selectedWallFace.RelatedLine.Windows.Count; i++)
+        {
+            h = selectedWallFace.RelatedLine.Windows[i].WindowHeight;
+            w = selectedWallFace.RelatedLine.Windows[i].WindowWidth;
+            windowSum += (h * w);
+        }
+        return windowSum;
+    }
 
-    public void GetAllDoorArea()
+    public void GetSelectedDoorArea()
     {
         float doorSum = 0;
         float h , w;
@@ -1614,14 +1635,69 @@ public class BuildingArea : MonoBehaviour
     }
 
 
-    public void GetWallThickness()
+    public float returnAllDoorArea()
+    {
+        float doorSum = 0;
+        float h, w;
+        for (int j = 0; j < lines.Count; j++)
+        {
+            for (int i = 0; i < lines[j].Doors.Count; i++)
+            {
+                h = lines[j].Doors[i].DoorHeight;
+                w = lines[j].Doors[i].DoorWidth;
+                doorSum += (h * w);
+            }
+        }
+       return doorSum;
+    }
+
+
+    
+
+    public double returnRoofArea()
+    {
+        double roofArea = 0;
+        Vector3 a,b,c;//fistpoint, secpoint, thirpoint;
+        Mesh mesh = Roof.GetComponent<MeshFilter>().mesh;
+    //    Mesh mesh = GetCeil();
+        Vector3[] vert = mesh.vertices;
+        int[] ind = mesh.GetIndices(0);
+        for (int i = 0; i < vert.Length; i+=3)
+        {
+             a= vert[ind[i]];
+             b= vert[ind[i+1]];
+             c= vert[ind[i + 2]];
+             roofArea+= 0.5 * (Mathf.Abs((a.x - c.x) * (b.z - a.z) - (a.x - b.x) * (c.z - a.z)));
+        }
+        return roofArea;
+    }
+
+    public void setRoofDepth()
+    {
+        RoofDepth = float.Parse(roofDepth.text);
+    }
+
+    public void GetRoofDepth()
+    {
+        roofDepth.text = RoofDepth.ToString();
+    }
+
+
+    public void setWallThickness()
     {
         float th = selectedWallFace.RelatedLine.Thickness;
-        Debug.Log ("the thickness of this wall =" + th);
+        wallThick.text = th.ToString(); 
+    }
+
+
+    public void getWallThickness()//selected
+    {
+        selectedWallFace.RelatedLine.Thickness = float.Parse(wallThick.text);
+        
     }
 	public void ClearSelection(){
 		selectedWallFace = null;
 	}
-
+    
 
 }
