@@ -20,7 +20,6 @@ public class WallFace
 
 		wireframeLines = new Line[6];
 		for (int i = 0; i < wireframeLines.Length; i++) {
-			wireframeLines [i] = new Line (new List<Vector3> () { a, b }, 0, 1, 0, wireframeMaterial, null, null, null);
 		}
 		WireframeMaterial = wireframeMaterial;
 		update ();
