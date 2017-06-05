@@ -241,7 +241,7 @@ public class BuildingArea : MonoBehaviour
 			ba.lineVertices = new List<Vector3> (lines [0].Vertices);
 
 			for (int i = 0; i < lines.Count; i++) {
-				Line l = new Line (ba.lineVertices, lines [i].aID, lines [i].bID, lines [i].Thickness, GameObject.Instantiate (lines [i].LineMaterial), GameObject.Instantiate (lines [i].InnerMaterial), GameObject.Instantiate (lines [i].OuterMaterial), GameObject.Instantiate (lines [i].SideMaterial));
+				Line l = new Line (ba.lineVertices, lines [i].aID, lines [i].bID, lines [i].InsulationThickness, lines[i].WallThickness, GameObject.Instantiate (lines [i].LineMaterial), GameObject.Instantiate (lines [i].InnerMaterial), GameObject.Instantiate (lines [i].OuterMaterial), GameObject.Instantiate (lines [i].SideMaterial));
 
 				for (int j = 0; j < lines [i].Doors.Count; j++) {
 					WallDoor wd = new WallDoor (l, lines [i].Doors [j].Position.x, lines [i].Doors [j].DoorWidth, lines [i].Doors [j].DoorHeight, GameObject.Instantiate (lines [i].Doors [j].Door));
@@ -276,7 +276,7 @@ public class BuildingArea : MonoBehaviour
 		ba.SelectedItem = null;
 		ba.DraggedLineMaterial = DraggedLineMaterial;
 		ba.gameCamera = Camera.main.GetComponent<ObjectFollowCamera>();
-		ba.DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.4f, ba.DraggedLineMaterial, null, null, null);
+		ba.DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.2f, 0.2f, ba.DraggedLineMaterial, null, null, null);
 		ba.DraggedLine.Enabled = false;
 		ba.IsBasement = IsBasement;
 
@@ -625,7 +625,7 @@ public class BuildingArea : MonoBehaviour
 		if (snapObject != null)
 			snapObject = GameObject.Instantiate (snapObject);
 		
-        DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.4f, DraggedLineMaterial, null, null, null);
+        DraggedLine = new Line(new List<Vector3>() { Vector3.zero, Vector3.zero }, 0, 1, 0.2f, 0.2f, DraggedLineMaterial, null, null, null);
 		DraggedLine.Height = Height;
 		DraggedLine.Enabled = false;
 
@@ -834,9 +834,9 @@ public class BuildingArea : MonoBehaviour
 						if (!pointASelected) {
 							pointA = hit.point;
 							if (DraggedAreaLines [0] == null) {
-								DraggedAreaLines [0] = new Line (new List<Vector3> () { pointA, pointA, pointA, pointA }, 0, 1, 0.4f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
+								DraggedAreaLines [0] = new Line (new List<Vector3> () { pointA, pointA, pointA, pointA }, 0, 1, 0.2f, 0.2f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
 								for (int i = 0; i < 3; i++)
-									DraggedAreaLines [i + 1] = new Line (DraggedAreaLines [0].Vertices, i + 1, (i + 2) % 4, 0.4f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
+									DraggedAreaLines [i + 1] = new Line (DraggedAreaLines [0].Vertices, i + 1, (i + 2) % 4, 0.2f, 0.2f, DraggedLineMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial, DefaultOuterWallMaterial);
 							}
 
 							for (int i = 0; i < DraggedAreaLines [0].Vertices.Count; i++) {
@@ -1235,7 +1235,7 @@ public class BuildingArea : MonoBehaviour
 									lineVertices.Add (pointB);
 								}
 
-								lines.Add (new Line (lineVertices, id1, id2, 0.2f, LineMaterial, DefaultInnerWallMaterial, DefaultOuterWallMaterial, DefaultSideMaterial));
+								lines.Add (new Line (lineVertices, id1, id2, 0.1f, 0.1f, LineMaterial, DefaultInnerWallMaterial, DefaultOuterWallMaterial, DefaultSideMaterial));
 								lines [lines.Count - 1].Height = Height;
 								lines [lines.Count - 1].Parent = this.transform;
 								pointASelected = false;
@@ -1362,7 +1362,7 @@ public class BuildingArea : MonoBehaviour
 
 				verts.Add (wallFaces [i].a);
 				verts.Add (wallFaces [i].b);
-				outer.Add (new Line (verts, verts.Count - 2, verts.Count - 1, 0.1f, null, null, null, null));
+				outer.Add (new Line (verts, verts.Count - 2, verts.Count - 1, 0.05f, 0.05f, null, null, null, null));
 			}
 		}
 		Line.WeldVertices (outer);
